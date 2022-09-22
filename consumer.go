@@ -740,7 +740,8 @@ func (child *partitionConsumer) parseResponse(response *FetchResponse) ([]*Consu
 			}
 		} else if block.LastRecordsBatchOffset != nil && *block.LastRecordsBatchOffset < block.HighWaterMarkOffset {
 			// check last record offset to avoid stuck if high watermark was not reached
-			Logger.Printf("consumer/broker/%d received batch with zero records but high watermark was not reached, topic %s, partition %d, offset %d\n", child.broker.broker.ID(), child.topic, child.partition, *block.LastRecordsBatchOffset)
+			Logger.Printf("consumer/broker/%d received batch with zero records but high watermark was not reached, topic %s, partition %d, offset %d\n", child.broker.broker.ID(),
+				child.topic, child.partition, *block.LastRecordsBatchOffset)
 			child.offset = *block.LastRecordsBatchOffset + 1
 		}
 
@@ -1014,7 +1015,8 @@ func (bc *brokerConsumer) handleResponses() {
 			Logger.Printf("consumer/%s/%d shutting down because %s\n", child.topic, child.partition, result)
 			close(child.trigger)
 			delete(bc.subscriptions, child)
-		} else if errors.Is(result, ErrUnknownTopicOrPartition) || errors.Is(result, ErrNotLeaderForPartition) || errors.Is(result, ErrLeaderNotAvailable) || errors.Is(result, ErrReplicaNotAvailable) {
+		} else if errors.Is(result, ErrUnknownTopicOrPartition) || errors.Is(result, ErrNotLeaderForPartition) || errors.Is(result, ErrLeaderNotAvailable) || errors.Is(result,
+			ErrReplicaNotAvailable) {
 			// not an error, but does need redispatching
 			Logger.Printf("consumer/broker/%d abandoned subscription to %s/%d because %s\n",
 				bc.broker.ID(), child.topic, child.partition, result)
@@ -1098,6 +1100,7 @@ func (bc *brokerConsumer) fetchNewMessages() (*FetchResponse, error) {
 
 	// avoid to fetch when there is no block
 	if len(request.blocks) == 0 {
+		time.Sleep(10 * time.Millisecond)
 		return nil, nil
 	}
 
